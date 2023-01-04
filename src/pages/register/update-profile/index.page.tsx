@@ -1,14 +1,23 @@
+import { GetServerSideProps } from 'next'
+import { useRouter } from 'next/router'
+import { unstable_getServerSession } from 'next-auth'
+import { useSession } from 'next-auth/react'
 import { z } from 'zod'
 import { ArrowRight } from 'phosphor-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Button, Heading, MultiStep, Text, TextArea } from '@ignite-ui/react'
+import { buildNextAuthOptions } from '../../api/auth/[...nextauth].api'
+import { api } from '../../../lib/axios'
+import {
+  Avatar,
+  Button,
+  Heading,
+  MultiStep,
+  Text,
+  TextArea,
+} from '@ignite-ui/react'
 import { Container, Header } from '../styles'
 import { FormAnnotation, ProfileBox } from './styles'
-import { useSession } from 'next-auth/react'
-import { unstable_getServerSession } from 'next-auth'
-import { buildNextAuthOptions } from '../../api/auth/[...nextauth].api'
-import { GetServerSideProps } from 'next'
 
 const updateProfileSchema = z.object({
   bio: z.string(),
@@ -26,10 +35,15 @@ export default function Register() {
   })
 
   const session = useSession()
+  const router = useRouter()
 
-  console.log(session)
+  async function handleUpdateProfile(data: UpdateProfileData) {
+    await api.put('users/profile', {
+      bio: data.bio,
+    })
 
-  async function handleUpdateProfile(data: UpdateProfileData) {}
+    router.push(`/schedule/${session.data?.user.username}`)
+  }
 
   return (
     <Container>
@@ -47,6 +61,10 @@ export default function Register() {
       <ProfileBox as="form" onSubmit={handleSubmit(handleUpdateProfile)}>
         <label>
           <Text size="sm">Foto de perfil</Text>
+          <Avatar
+            src={session.data?.user.avatar_url}
+            alt={session.data?.user.avatar_url}
+          />
         </label>
 
         <label>
